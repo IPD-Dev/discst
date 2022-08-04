@@ -1,7 +1,6 @@
 // horribly messy little script thrown together to
 // send a message to a channel
 
-
 use std::env;
 use tokio;
 

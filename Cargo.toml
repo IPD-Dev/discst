@@ -1,0 +1,10 @@
+[package]
+name = "discst"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mcping = "0.2.0"
+serde = { version = "1.0.142", features = ["derive"] }
+serenity = "0.11.5"
+toml = "0.5.9"

@@ -1,4 +1,4 @@
-use mcping;
+use mc_query::status;
 use serde::Deserialize;
 use serenity;
 use serenity::model::prelude::MessageId;

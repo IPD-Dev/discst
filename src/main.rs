@@ -1,11 +1,11 @@
+use mcping;
 use serde::Deserialize;
 use serenity;
 use serenity::model::prelude::MessageId;
-use mcping;
-use toml::from_str;
+use std::env::args;
 use std::fs::read_to_string;
 use std::process::exit;
-
+use toml::from_str;
 
 #[derive(Deserialize)]
 struct Config {
@@ -14,26 +14,34 @@ struct Config {
     server: String,
     port: Option<u16>,
     up: String,
-    down: String
+    down: String,
 }
 
 fn main() {
-    let filename = "discst.toml";
-    println!("Hello, {}!",filename);
+    let filename = &match args().nth(1) {
+        Some(h) => h,
+        None => {
+            eprintln!(
+                "usage: {} file",
+                args().nth(0).expect("how did you do that")
+            );
+            exit(1);
+        }
+    };
 
     let contents = match read_to_string(filename) {
         Ok(h) => h,
-        Err(_a) => {
-            eprintln!("failed to read {} ut oh", filename);
+        Err(e) => {
+            eprintln!("failed to read {}. {}", filename, e);
             exit(69);
         }
     };
 
     let config: Config = match from_str(&contents) {
         Ok(h) => h,
-        Err(_a) => {
-            eprintln!("failed to parse {}. did you put all the required options?", filename);
-            exit(69);
+        Err(e) => {
+            eprintln!("failed to parse {}. {}", filename, e);
+            exit(420);
         }
     };
 

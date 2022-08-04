@@ -1,0 +1,7 @@
+token = "kjfdhgdfkjghdfg"
+message = 12345
+server = "kitsune.icu"
+port = 25565 # optional
+
+up = "the server's up lol"
+down = "oh no its down"

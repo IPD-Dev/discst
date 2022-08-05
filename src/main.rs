@@ -123,11 +123,6 @@ async fn mcstatus_from_config(config: &Arc<Config>) -> &String {
         Ok(_) => return &config.up,
         Err(_) => return &config.down,
     };
-
-    // {
-    //   Ok(_) => &config.up,
-    // Err(_) => &config.down,
-    // };
 }
 
 #[tokio::main]

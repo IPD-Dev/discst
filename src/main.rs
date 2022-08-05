@@ -84,8 +84,31 @@ async fn start_ping_interval(config: Arc<Config>, ctx: Context) {
 
     loop {
         interval.tick().await;
-        println!("{:?}", mcstatus_from_config(&config).await);
+        update_status_msg(
+            &ctx,
+            config.channel,
+            config.message,
+            (mcstatus_from_config(&config).await).to_string(),
+        )
+        .await;
     }
+}
+
+async fn update_status_msg(ctx: &Context, channelid: u64, message: u64, text: String) {
+    let mut discord_message = match ctx.http.get_message(channelid, message).await {
+        Ok(h) => h,
+        Err(e) => {
+            println!("error getting message: {}", e);
+            return;
+        }
+    };
+    match discord_message.edit(&ctx, |m| m.content(text)).await {
+        Ok(h) => h,
+        Err(e) => {
+            println!("error editing message: {}", e);
+            return;
+        }
+    };
 }
 
 async fn mcstatus_from_config(config: &Arc<Config>) -> &String {

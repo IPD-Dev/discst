@@ -15,7 +15,6 @@ use serenity::prelude::*;
 #[derive(Deserialize)]
 struct Config {
     token: String,
-    message: u64,
     channel: u64,
     server: String,
     port: Option<u16>,
@@ -84,28 +83,34 @@ async fn start_ping_interval(config: Arc<Config>, ctx: Context) {
 
     loop {
         interval.tick().await;
-        update_status_msg(
+        update_status_channel(
             &ctx,
             config.channel,
-            config.message,
             (mcstatus_from_config(&config).await).to_string(),
         )
         .await;
     }
 }
 
-async fn update_status_msg(ctx: &Context, channelid: u64, message: u64, text: String) {
-    let mut discord_message = match ctx.http.get_message(channelid, message).await {
+async fn update_status_channel(ctx: &Context, channelid: u64, text: String) {
+    let discord_channel = match ctx.http.get_channel(channelid).await {
         Ok(h) => h,
         Err(e) => {
-            println!("error getting message: {}", e);
+            println!("error getting channel: {}", e);
             return;
         }
     };
-    match discord_message.edit(&ctx, |m| m.content(text)).await {
+    let mut discord_channel = match discord_channel.guild() {
+        Some(h) => h,
+        None => {
+            println!("im not in the guild lol");
+            return;
+        }
+    };
+    match discord_channel.edit(&ctx, |m| m.name(text)).await {
         Ok(h) => h,
         Err(e) => {
-            println!("error editing message: {}", e);
+            println!("error editing channel: {}", e);
             return;
         }
     };

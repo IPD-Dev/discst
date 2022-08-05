@@ -1,23 +1,25 @@
-use mc_query::status;
+use async_minecraft_ping;
 use serde::Deserialize;
 use std::env::args;
 use std::fs::read_to_string;
 use std::process::exit;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio;
 use toml::from_str;
 
 use serenity::async_trait;
 use serenity::model::gateway::Ready;
-use serenity::model::prelude::MessageId;
 use serenity::prelude::*;
 
 #[derive(Deserialize)]
 struct Config {
     token: String,
-    message: MessageId,
+    message: u64,
+    channel: u64,
     server: String,
     port: Option<u16>,
+    interval: Option<u64>,
     up: String,
     down: String,
 }
@@ -66,10 +68,43 @@ impl EventHandler for Handler {
         println!("{} connected", ready.user.name);
         let config = {
             let data_read = ctx.data.read().await;
-            data_read.get::<ConfigContainer>().expect("gimme the config").clone()
+            data_read
+                .get::<ConfigContainer>()
+                .expect("gimme the config")
+                .clone()
         };
-        println!("{}", config.server);
+        tokio::spawn(async move {
+            start_ping_interval(config, ctx).await;
+        });
     }
+}
+
+async fn start_ping_interval(config: Arc<Config>, ctx: Context) {
+    let mut interval = tokio::time::interval(Duration::from_secs(config.interval.unwrap_or(30)));
+
+    loop {
+        interval.tick().await;
+        println!("{:?}", mcstatus_from_config(&config).await);
+    }
+}
+
+async fn mcstatus_from_config(config: &Arc<Config>) -> &String {
+    let mut status = async_minecraft_ping::ConnectionConfig::build(&config.server);
+    status = status.with_port(config.port.unwrap_or(25565));
+
+    let connection = match status.connect().await {
+        Ok(h) => h,
+        Err(_) => return &config.down,
+    };
+    match connection.status().await {
+        Ok(_) => return &config.up,
+        Err(_) => return &config.down,
+    };
+
+    // {
+    //   Ok(_) => &config.up,
+    // Err(_) => &config.down,
+    // };
 }
 
 #[tokio::main]
@@ -78,7 +113,10 @@ async fn main() {
 
     let intents = GatewayIntents::empty();
 
-    let mut client = Client::builder(&config.token, intents).event_handler(Handler).await.expect("Error creating client");
+    let mut client = Client::builder(&config.token, intents)
+        .event_handler(Handler)
+        .await
+        .expect("Error creating client");
 
     {
         let mut data = client.data.write().await;

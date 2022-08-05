@@ -1,7 +1,9 @@
 token = "kjfdhgdfkjghdfg"
-message = 12345
+message = 12345234234
+channel = 123123123
 server = "kitsune.icu"
 port = 25565 # optional
+interval = 30 # seconds between pings, optional
 
 up = "the server's up lol"
 down = "oh no its down"

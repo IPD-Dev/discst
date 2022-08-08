@@ -3,6 +3,7 @@ channel = 123123123
 server = "kitsune.icu"
 port = 25565 # optional
 interval = 30 # seconds between pings, optional
+minplayers = 0 # minimum number of players to declare server online, 0 to disable, optional
 
 up = "the server's up lol"
 down = "oh no its down"

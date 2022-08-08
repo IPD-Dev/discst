@@ -19,6 +19,7 @@ struct Config {
     server: String,
     port: Option<u16>,
     interval: Option<u64>,
+    minplayers: Option<u32>,
     up: String,
     down: String,
 }
@@ -125,7 +126,13 @@ async fn mcstatus_from_config(config: &Arc<Config>) -> &String {
         Err(_) => return &config.down,
     };
     match connection.status().await {
-        Ok(_) => return &config.up,
+        Ok(c) => {
+            if c.status.players.online >= config.minplayers.unwrap_or(0) {
+                return &config.up;
+            } else {
+                return &config.down;
+            }
+        }
         Err(_) => return &config.down,
     };
 }

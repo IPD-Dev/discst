@@ -81,15 +81,19 @@ impl EventHandler for Handler {
 
 async fn start_ping_interval(config: Arc<Config>, ctx: Context) {
     let mut interval = tokio::time::interval(Duration::from_secs(config.interval.unwrap_or(30)));
+    let mut last_message = "".to_string();
+    let mut message;
 
     loop {
         interval.tick().await;
-        update_status_channel(
-            &ctx,
-            config.channel,
-            (mcstatus_from_config(&config).await).to_string(),
-        )
-        .await;
+        message = (mcstatus_from_config(&config).await).to_string();
+
+        if message != last_message {
+            println!("updating to {}", &message);
+            update_status_channel(&ctx, config.channel, message.to_string()).await;
+        }
+
+        last_message = message.clone();
     }
 }
 

@@ -10,6 +10,7 @@ use toml::from_str;
 
 use serenity::async_trait;
 use serenity::model::gateway::Ready;
+use serenity::model::gateway::Activity;
 use serenity::prelude::*;
 
 #[derive(Deserialize)]
@@ -73,10 +74,17 @@ impl EventHandler for Handler {
                 .expect("gimme the config")
                 .clone()
         };
+
+        set_playing_status(&ctx, &config.server).await;
+
         tokio::spawn(async move {
             start_ping_interval(config, ctx).await;
         });
     }
+}
+
+async fn set_playing_status(ctx: &Context, server: &String) {
+    ctx.set_activity(Activity::playing(format!("on {}", server))).await;
 }
 
 async fn start_ping_interval(config: Arc<Config>, ctx: Context) {
@@ -93,6 +101,7 @@ async fn start_ping_interval(config: Arc<Config>, ctx: Context) {
             update_status_channel(&ctx, config.channel, message.to_string()).await;
         }
 
+        // FIXME: this clone could probably be replaced by something faster
         last_message = message.clone();
     }
 }

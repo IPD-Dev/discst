@@ -1,16 +1,15 @@
-use async_minecraft_ping;
 use serde::Deserialize;
 use std::env::args;
 use std::fs::read_to_string;
 use std::process::exit;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio;
+
 use toml::from_str;
 
 use serenity::async_trait;
-use serenity::model::gateway::Ready;
 use serenity::model::gateway::Activity;
+use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 
 #[derive(Deserialize)]
@@ -31,7 +30,7 @@ fn readconfig() -> Config {
         None => {
             eprintln!(
                 "usage: {} file",
-                args().nth(0).expect("how did you do that")
+                args().next().expect("how did you do that")
             );
             exit(1);
         }
@@ -53,7 +52,7 @@ fn readconfig() -> Config {
         }
     };
 
-    return config;
+    config
 }
 
 struct ConfigContainer;
@@ -84,7 +83,8 @@ impl EventHandler for Handler {
 }
 
 async fn set_playing_status(ctx: &Context, server: &String) {
-    ctx.set_activity(Activity::playing(format!("on {}", server))).await;
+    ctx.set_activity(Activity::playing(format!("on {}", server)))
+        .await;
 }
 
 async fn start_ping_interval(config: Arc<Config>, ctx: Context) {
@@ -125,9 +125,8 @@ async fn update_status_channel(ctx: &Context, channelid: u64, text: String) {
         Ok(h) => h,
         Err(e) => {
             println!("error editing channel: {}", e);
-            return;
         }
-    };
+    }
 }
 
 async fn mcstatus_from_config(config: &Arc<Config>) -> &String {
@@ -141,13 +140,13 @@ async fn mcstatus_from_config(config: &Arc<Config>) -> &String {
     match connection.status().await {
         Ok(c) => {
             if c.status.players.online >= config.minplayers.unwrap_or(0) {
-                return &config.up;
+                &config.up
             } else {
-                return &config.down;
+                &config.down
             }
         }
-        Err(_) => return &config.down,
-    };
+        Err(_) => &config.down,
+    }
 }
 
 #[tokio::main]

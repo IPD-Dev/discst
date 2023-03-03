@@ -2,7 +2,6 @@
 // send a message to a channel
 
 use std::env;
-use tokio;
 
 use serenity::async_trait;
 use serenity::model::gateway::Ready;
